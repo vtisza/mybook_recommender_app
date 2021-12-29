@@ -1,6 +1,10 @@
+from re import escape
 import streamlit as st
 import pandas as pd
 import numpy as np
+
+def make_link(text):
+    return f"<a target='_blank' href={text}>{text}</a>"
 
 @st.cache
 def load_data():
@@ -14,6 +18,8 @@ def load_data():
 
     my_recommendations["rating_count"] = my_recommendations["rating_count"].rank(method='min', pct=True)*100
     min_read, max_read = int(my_recommendations['rating_count'].min()), int(my_recommendations['rating_count'].max())
+
+    my_recommendations['url'] = my_recommendations['url'].apply(lambda x: make_link(x))
 
     return my_recommendations, book_tags, min_read, max_read
 
@@ -56,4 +62,4 @@ if st.button('Ajanlj konyvet'):
     
     displayed.index = displayed.index+1
 
-    st.dataframe(displayed)
+    st.write(displayed.to_html(escape=False), unsafe_allow_html=True)
