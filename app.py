@@ -14,6 +14,8 @@ def load_data():
         book_tags = book_tags.union(set(book))
     
     book_tags = list(book_tags)
+    book_tags = [book_tag.strip() for book_tag in book_tags]
+    book_tags = list(set(book_tags))
     book_tags.sort()
 
     my_recommendations["rating_count"] = my_recommendations["rating_count"].rank(method='min', pct=True)*100
