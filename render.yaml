@@ -1,0 +1,6 @@
+name: My book recommender
+
+command: streamlit run app.py
+
+environment:
+  STREAMLIT_SERVER_PORT: $PORT
