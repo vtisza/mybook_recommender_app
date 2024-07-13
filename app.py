@@ -2,16 +2,17 @@ from re import escape
 import streamlit as st
 import pandas as pd
 import numpy as np
+import itertools
 
 def make_link(text):
     return f"<a target='_blank' href={text}>{text}</a>"
 
-@st.cache
+@st.cache_data
 def load_data():
     my_recommendations = pd.read_parquet('./data/my_recommendations.p')
-    book_tags=set()
-    for book in my_recommendations['book_tags']:
-        book_tags = book_tags.union(set(book))
+
+    flattened_list = itertools.chain.from_iterable(my_recommendations['book_tags'])
+    book_tags = list(set(flattened_list))
     
     book_tags = list(book_tags)
     book_tags = [book_tag.strip() for book_tag in book_tags]
@@ -31,6 +32,7 @@ st.title('Viktor konyvajanlo')
 selected_tags = st.multiselect("Kivalasztott cimke", book_tags,)
 filtered_tags = st.multiselect("Filterezett cimke", book_tags)
 is_recommended = st.radio('Tipus', ["Ajanlott", "Nem ajanlott"])
+selected_user = st.selectbox("User", ['Orsi', 'Viktor'])
 min_read_s, max_read_s = st.slider('Olvasottsag (percentils)', min_read, max_read, value= [min_read, max_read])
 
 if st.button('Ajanlj konyvet'):
@@ -57,10 +59,15 @@ if st.button('Ajanlj konyvet'):
     
     displayed = my_recommendations[selected_idx&(~filtered_idx)&min_idx&max_idx]
 
-    if is_recommended=="Ajanlott":
-        displayed = displayed.sort_values('pred',ascending=False).reset_index(drop=True)[['author','title', 'book_tags', 'url']][:1000]
+    if selected_user=='Orsi':
+        target_col = 'bosolya_rating'
     else:
-        displayed = displayed.sort_values('pred',ascending=True).reset_index(drop=True)[['author','title', 'book_tags', 'url']][:1000]
+        target_col = 'vtisza_rating'
+
+    if is_recommended=="Ajanlott":
+        displayed = displayed.sort_values(target_col,ascending=False).reset_index(drop=True)[['author','title', 'book_tags', 'url']][:1000]
+    else:
+        displayed = displayed.sort_values(target_col,ascending=True).reset_index(drop=True)[['author','title', 'book_tags', 'url']][:1000]
     
     displayed.index = displayed.index+1
 
